@@ -105,21 +105,31 @@ def queue_email_message(email_message, fail_silently=False, priority=None):
         priority = email_message.extra_headers.pop(constants.PRIORITY_HEADER)
         priority = constants.PRIORITIES.get(priority.lower())
 
+    messages = (models.Message.objects.create(to_address=to_email, from_address=email_message.from_email,
+                                              subject=email_message.subject,
+                                              encoded_message=email_message.message().as_string())
+                        for to_email in email_message.recipients())
+
     if priority == constants.PRIORITY_EMAIL_NOW:
         if constants.EMAIL_BACKEND_SUPPORT:
             from django.core.mail import get_connection
             from django_mailer.engine import send_message
             connection = get_connection(backend=settings.USE_BACKEND)
             result = send_message(email_message, smtp_connection=connection)
+
+            log_message = ''
+
+            if result != constants.RESULT_SENT:
+                log_message = 'Message send failure!' 
+
+            for message in messages:
+                models.Log.objects.create(message=message, result=result, log_message=log_message)
+                
             return (result == constants.RESULT_SENT)
         else:
             return email_message.send()
     count = 0
-    for to_email in email_message.recipients():
-        message = models.Message.objects.create(
-            to_address=to_email, from_address=email_message.from_email,
-            subject=email_message.subject,
-            encoded_message=email_message.message().as_string())
+    for message in messages:
         queued_message = models.QueuedMessage(message=message)
         if priority:
             queued_message.priority = priority
