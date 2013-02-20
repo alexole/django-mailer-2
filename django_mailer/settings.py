@@ -23,3 +23,9 @@ LOCK_WAIT_TIMEOUT = max(getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", 0), 0)
 # An optional alternate lock path, potentially useful if you have multiple
 # projects running on the same server.
 LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
+
+# Patch all To fields with this value
+PATCH_DEST_EMAIL = getattr(settings, "MAILER_PATCH_DEST_EMAIL", None)
+# Add prefix to subject for emails patched with PATCH_DEST_EMAIL
+PATCH_DEST_SUBJECT = getattr(settings, "MAILER_PATCH_DEST_SUBJECT", None)
+

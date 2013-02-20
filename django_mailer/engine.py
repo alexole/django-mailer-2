@@ -14,6 +14,8 @@ import smtplib
 import tempfile
 import time
 
+import email
+
 if constants.EMAIL_BACKEND_SUPPORT:
     from django.core.mail import get_connection
 else:
@@ -128,6 +130,16 @@ def send_loop(empty_queue_sleep=None):
             time.sleep(empty_queue_sleep)
         send_all()
 
+def patch_encoded_message(encoded_message):
+    if not settings.PATCH_DEST_EMAIL:
+        return encoded_message
+
+    msg = email.message_from_string(smart_str(encoded_message))
+    msg.replace_header('To', 'Originally for: %s <%s>' % (msg.get('To'), settings.PATCH_DEST_EMAIL))
+    if settings.PATCH_DEST_SUBJECT:
+        msg.replace_header('Subject', '%s%s' % (settings.PATCH_DEST_SUBJECT, msg.get('Subject')))
+
+    return msg.as_string()
 
 def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
                  log=True):
@@ -175,8 +187,9 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
                          (message.to_address.encode("utf-8"),
                           message.subject.encode("utf-8")))
             opened_connection = smtp_connection.open()
+            msg = patch_encoded_message(message.encoded_message)
             smtp_connection.connection.sendmail(message.from_address,
-                [message.to_address], smart_str(message.encoded_message))
+                [message.to_address], smart_str(msg))
             queued_message.delete()
             result = constants.RESULT_SENT
         except (SocketError, smtplib.SMTPSenderRefused,
@@ -217,9 +230,10 @@ def send_message(email_message, smtp_connection=None):
 
     try:
         opened_connection = smtp_connection.open()
+        msg = patch_encoded_message(message.encoded_message)
         smtp_connection.connection.sendmail(email_message.from_email,
                     email_message.recipients(),
-                    email_message.message().as_string())
+                    msg)
         result = constants.RESULT_SENT
     except (SocketError, smtplib.SMTPSenderRefused,
             smtplib.SMTPRecipientsRefused,
