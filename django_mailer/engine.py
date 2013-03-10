@@ -230,7 +230,7 @@ def send_message(email_message, smtp_connection=None):
 
     try:
         opened_connection = smtp_connection.open()
-        msg = patch_encoded_message(message.encoded_message)
+        msg = patch_encoded_message(email_message.message())
         smtp_connection.connection.sendmail(email_message.from_email,
                     email_message.recipients(),
                     msg)
