@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django_mailer import constants, managers
 import datetime
 
@@ -38,6 +40,11 @@ class Message(models.Model):
 
     def __unicode__(self):
         return '%s: %s' % (self.to_address, self.subject)
+
+
+@receiver(pre_save, sender=Message)
+def subject_cutter(sender, instance, *args, **kwargs):
+    instance.subject = instance.subject[:Message._meta.get_field('subject').max_length]
 
 
 class QueuedMessage(models.Model):
