@@ -1,19 +1,24 @@
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 from django_mailer import models
 from django_mailer.management.commands import create_handler
-from optparse import make_option
 import logging
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = 'Place deferred messages back in the queue.'
-    option_list = NoArgsCommand.option_list + (
-        make_option('-m', '--max-retries', type='int',
-            help="Don't reset deferred messages with more than this many "
-                "retries."),
-    )
 
-    def handle_noargs(self, verbosity, max_retries=None, **options):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--max-retries', type=int,
+            dest='max_retries',
+            help='The number of messages to iterate before checking the queue '
+                 'again (in case new messages have been added while the queue '
+                 'is being cleared).'
+        )
+
+    def handle(self, *args, **options):
+        verbosity = options['verbosity']
+        max_retries = options.get('max_retries')
         # Send logged messages to the console.
         logger = logging.getLogger('django_mailer')
         handler = create_handler(verbosity)

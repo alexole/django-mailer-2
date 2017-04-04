@@ -14,7 +14,7 @@ class QueueMethods(object):
         Exclude future time-delayed messages.
 
         """
-        return self.exclude(date_queued__gt=datetime.datetime.now)
+        return self.exclude(date_queued__gt=datetime.datetime.now())
 
     def high_priority(self):
         """
