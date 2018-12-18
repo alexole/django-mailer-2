@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django_mailer import engine, settings
 from django_mailer.lockfile import FileLock
-from StringIO import StringIO
+from io import StringIO
 import logging
 import time
 

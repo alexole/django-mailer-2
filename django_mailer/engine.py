@@ -6,7 +6,7 @@ Methods here actually handle the sending of queued messages.
 """
 from django.utils.encoding import smart_str
 from django_mailer import constants, models, settings
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from .lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as SocketError
 import logging
 import os
@@ -194,11 +194,11 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
             result = constants.RESULT_SENT
         except (SocketError, smtplib.SMTPSenderRefused,
                 smtplib.SMTPRecipientsRefused,
-                smtplib.SMTPAuthenticationError), err:
+                smtplib.SMTPAuthenticationError) as err:
             queued_message.defer()
             logger.warning("Message to %s deferred due to failure: %s" %
                             (message.to_address.encode("utf-8"), err))
-            log_message = unicode(err)
+            log_message = str(err)
             result = constants.RESULT_FAILED
     if log:
         models.Log.objects.create(message=message, result=result,
