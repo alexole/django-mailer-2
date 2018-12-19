@@ -28,9 +28,9 @@ def send_mail(subject, message, from_email, recipient_list,
 
     """
     from django.core.mail import EmailMessage
-    from django.utils.encoding import force_unicode
+    from django.utils.encoding import force_text
 
-    subject = force_unicode(subject)
+    subject = force_text(subject)
     email_message = EmailMessage(subject, message, from_email,
                                  recipient_list)
     queue_email_message(email_message, priority=priority)
@@ -48,13 +48,13 @@ def mail_admins(subject, message, fail_silently=False, priority=None):
 
     """
     from django.conf import settings as django_settings
-    from django.utils.encoding import force_unicode
+    from django.utils.encoding import force_text
     from django_mailer import constants, settings
 
     if priority is None:
         settings.MAIL_ADMINS_PRIORITY
 
-    subject = django_settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
+    subject = django_settings.EMAIL_SUBJECT_PREFIX + force_text(subject)
     from_email = django_settings.SERVER_EMAIL
     recipient_list = [recipient[1] for recipient in django_settings.ADMINS]
     send_mail(subject, message, from_email, recipient_list, priority=priority)
@@ -72,13 +72,13 @@ def mail_managers(subject, message, fail_silently=False, priority=None):
 
     """
     from django.conf import settings as django_settings
-    from django.utils.encoding import force_unicode
+    from django.utils.encoding import force_text
     from django_mailer import settings
 
     if priority is None:
         priority = settings.MAIL_MANAGERS_PRIORITY
 
-    subject = django_settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
+    subject = django_settings.EMAIL_SUBJECT_PREFIX + force_text(subject)
     from_email = django_settings.SERVER_EMAIL
     recipient_list = [recipient[1] for recipient in django_settings.MANAGERS]
     send_mail(subject, message, from_email, recipient_list, priority=priority)
